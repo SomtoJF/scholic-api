@@ -49,21 +49,26 @@ func (a *ChatAgent) Run(ctx context.Context, input RunInput) (RunOutput, error) 
 	messages = []ContextMessage{{Role: "system", Content: systemPrompt}, {Role: "user", Content: userPrompt}}
 
 	for turn := 0; turn < MaxLLMTurns; turn++ {
-		modelTurn, err := a.Provider.Complete(ctx, ModelRequest{Messages: messages, Tools: definitions})
+		completion, err := a.Provider.GetCompletions(ctx, CompletionRequest{
+			Model:      "openai/gpt-6-luna",
+			ToolChoice: "auto",
+			Messages:   messages,
+			Tools:      definitions,
+		})
 		if err != nil {
 			return RunOutput{}, err
 		}
-		if modelTurn.Output != nil {
-			return RunOutput{Output: modelTurn.Output}, nil
+		if completion.Output != nil {
+			return RunOutput{Output: completion.Output}, nil
 		}
-		if len(modelTurn.ToolCalls) == 0 {
+		if len(completion.ToolCalls) == 0 {
 			return RunOutput{}, errors.New("LLM returned neither output nor tool calls")
 		}
-		results, err := a.executeToolCalls(ctx, input, modelTurn.ToolCalls)
+		results, err := a.executeToolCalls(ctx, input, completion.ToolCalls)
 		if err != nil {
 			return RunOutput{}, err
 		}
-		messages = append(messages, ContextMessage{Role: "assistant", Content: encodeToolCalls(modelTurn.ToolCalls[:min(len(modelTurn.ToolCalls), MaxToolCallsPerTurn)])})
+		messages = append(messages, ContextMessage{Role: "assistant", Content: encodeToolCalls(completion.ToolCalls[:min(len(completion.ToolCalls), MaxToolCallsPerTurn)])})
 		messages = append(messages, ContextMessage{Role: "tool", Content: encodeToolResults(results)})
 	}
 	return RunOutput{}, fmt.Errorf("chat agent exceeded maximum of %d LLM turns", MaxLLMTurns)
@@ -99,13 +104,25 @@ func (a *ChatAgent) executeToolCall(ctx context.Context, input RunInput, call To
 		if err != nil {
 			return ToolResult{ToolCallID: call.ID, Name: call.Name, Error: err.Error()}
 		}
+		if result.Error != "" || result.Output == nil {
+			return result
+		}
+		var request SearchPageContentInput
+		if err := json.Unmarshal(call.Arguments, &request); err != nil {
+			return ToolResult{ToolCallID: call.ID, Name: call.Name, Error: err.Error()}
+		}
+		filtered, err := filterPageSearchResult(ctx, a.Provider, request.Query, result.Output)
+		if err != nil {
+			return ToolResult{ToolCallID: call.ID, Name: call.Name, Error: err.Error()}
+		}
+		result.Output = filtered
 		return result
 	}
 	for _, tool := range a.Tools {
 		if tool.Definition().Name != call.Name {
 			continue
 		}
-		output, err := tool.Execute(ctx, ToolContext{UserID: input.UserID, ChatID: input.ChatID, PageURL: input.PageURL}, call.Arguments)
+		output, err := tool.Execute(ctx, ToolContext{UserID: input.UserID, ChatID: input.ChatID, PageURL: input.PageURL, Provider: a.Provider}, call.Arguments)
 		if err != nil {
 			return ToolResult{ToolCallID: call.ID, Name: call.Name, Error: err.Error()}
 		}

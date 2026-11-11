@@ -29,8 +29,70 @@ type RunOutput struct {
 }
 
 type ModelRequest struct {
-	Messages []ContextMessage
-	Tools    []ToolDefinition
+	Model      string
+	ToolChoice string
+	Messages   []ContextMessage
+	Tools      []ToolDefinition
+}
+
+type CompletionRequest struct {
+	Model             string
+	ToolChoice        string
+	Messages          []ContextMessage
+	Tools             []ToolDefinition
+	MaxTokens         *int
+	Temperature       *float64
+	ParallelToolCalls *bool
+	ResponseSchema    any
+}
+
+type CompletionResponse struct {
+	Output       *string
+	ToolCalls    []ToolCall
+	InputTokens  int
+	OutputTokens int
+	TotalCost    float64
+	Model        string
+}
+
+type EmbeddingRequest struct {
+	Model string
+	Input string
+}
+
+type EmbeddingResponse struct {
+	Embedding []float64
+	Model     string
+}
+
+type DecisionsRequest struct {
+	Model      string                      `json:"model"`
+	State      any                         `json:"state"`
+	Questions  map[string]DecisionQuestion `json:"questions"`
+	Screenshot string                      `json:"-"`
+}
+
+type DecisionQuestion struct {
+	Type         string         `json:"type"`
+	Instructions string         `json:"instructions"`
+	Criteria     map[string]any `json:"criteria,omitempty"`
+}
+
+type DecisionsResponse struct {
+	Answers map[string]DecisionAnswer `json:"answers"`
+}
+
+type DecisionAnswer struct {
+	Type  string `json:"type"`
+	Value *bool  `json:"value,omitempty"`
+	Noul  *bool  `json:"noul,omitempty"`
+}
+
+func (a DecisionAnswer) IsTrue() bool {
+	if a.Noul != nil {
+		return *a.Noul
+	}
+	return a.Value != nil && *a.Value
 }
 
 type ModelTurn struct {
@@ -52,12 +114,15 @@ type ToolResult struct {
 }
 
 type ContextMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+	Role     string `json:"role"`
+	Content  string `json:"content"`
+	ImageURL string `json:"imageUrl,omitempty"`
 }
 
 type LLMProvider interface {
-	Complete(context.Context, ModelRequest) (ModelTurn, error)
+	GetCompletions(context.Context, CompletionRequest) (CompletionResponse, error)
+	GenerateEmbedding(context.Context, EmbeddingRequest) (EmbeddingResponse, error)
+	GetDecisions(context.Context, DecisionsRequest) (DecisionsResponse, error)
 }
 
 type ToolTransport interface {
@@ -65,9 +130,10 @@ type ToolTransport interface {
 }
 
 type ToolContext struct {
-	UserID  uint
-	ChatID  uint
-	PageURL string
+	UserID   uint
+	ChatID   uint
+	PageURL  string
+	Provider LLMProvider
 }
 
 type ToolDefinition struct {

@@ -49,7 +49,13 @@ func main() {
 	jwt.InitJWT()
 	blocklist.LoadAndCache()
 	ai.InitGemini()
-	chatAgent := agents.NewChatAgent(nil, []agents.Tool{
+	var chatProvider agents.LLMProvider
+	if provider, err := agents.NewOpenRouterProvider(os.Getenv("OPENROUTER_API_KEY")); err != nil {
+		log.Printf("[Warning] OpenRouter not initialized: %v", err)
+	} else {
+		chatProvider = provider
+	}
+	chatAgent := agents.NewChatAgent(chatProvider, []agents.Tool{
 		agents.SearchChatHistoryTool(),
 		agents.GetChatHistoryRangeTool(),
 		agents.SearchPageContentTool(),
