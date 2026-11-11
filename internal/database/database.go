@@ -33,7 +33,7 @@ func InitializeDatabase() {
 	log.Printf("[Scholic] Database connected at %s:%s/%s",
 		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"))
 
-	err = DB.AutoMigrate(&models.User{}, &models.Annotation{}, &models.Highlight{}, &models.Comment{}, &models.Follow{}, &models.Reaction{}, &models.Notification{}, &models.Document{}, &models.Bookmark{}, &models.FeedEvent{}, &models.Collection{}, &models.CollectionEntry{})
+	err = DB.AutoMigrate(&models.User{}, &models.Annotation{}, &models.Highlight{}, &models.Comment{}, &models.Follow{}, &models.Reaction{}, &models.Notification{}, &models.Document{}, &models.Bookmark{}, &models.FeedEvent{}, &models.Collection{}, &models.CollectionEntry{}, &models.Chat{}, &models.Message{})
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
@@ -53,6 +53,18 @@ func InitializeDatabase() {
 		CREATE INDEX IF NOT EXISTS idx_documents_user_created
 		ON documents (user_id, created_at DESC)
 		WHERE deleted_at IS NULL
+	`)
+	_, _ = sqlDB.Exec(`
+		CREATE INDEX IF NOT EXISTS idx_messages_text_search
+		ON messages USING GIN (to_tsvector('english', message_text))
+	`)
+	_, _ = sqlDB.Exec(`
+		CREATE INDEX IF NOT EXISTS idx_annotations_quote_text_search
+		ON annotations USING GIN (to_tsvector('english', coalesce(quote_text, '')))
+	`)
+	_, _ = sqlDB.Exec(`
+		CREATE INDEX IF NOT EXISTS idx_annotations_text_search
+		ON annotations USING GIN (to_tsvector('english', coalesce(text, '')))
 	`)
 	log.Println("[Scholic] Database indexes verified")
 }

@@ -6,6 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"scholic/internal/agents"
+	"scholic/internal/agents/chat"
+	chattools "scholic/internal/agents/chat/tools"
 	"scholic/internal/blocklist"
 	"scholic/internal/database"
 	"scholic/internal/discover"
@@ -48,6 +51,20 @@ func main() {
 	jwt.InitJWT()
 	blocklist.LoadAndCache()
 	ai.InitGemini()
+	var chatProvider agents.LLMProvider
+	if provider, err := agents.NewOpenRouterProvider(os.Getenv("OPENROUTER_API_KEY")); err != nil {
+		log.Printf("[Warning] OpenRouter not initialized: %v", err)
+	} else {
+		chatProvider = provider
+	}
+	chatAgent := chat.NewChatAgent(chatProvider, []agents.Tool{
+		chattools.SearchChatHistoryTool(),
+		chattools.GetChatHistoryRangeTool(),
+		chattools.SearchPageContentTool(),
+		chattools.SearchAnnotationsTool(),
+		chattools.CommentOnAnnotationTool(),
+	}, chat.LoadRecentChatMessages, chattools.FilterPageSearchResult)
+	chatHandler := endpoints.NewChatHandler(chatAgent)
 
 	// Initialize R2 (optional — server works without it, just can't upload files)
 	if err := media.InitializeR2(); err != nil {
@@ -149,6 +166,14 @@ func main() {
 			bookmarksProtected.POST("", endpoints.CreateBookmark)
 			bookmarksProtected.PATCH("/by-url", endpoints.UpdateBookmarkByURL)
 			bookmarksProtected.DELETE("/by-url", endpoints.DeleteBookmarkByURL)
+		}
+
+		// ── Chats ──
+		chatsProtected := api.Group("/chats")
+		chatsProtected.Use(middleware.AuthMiddleware())
+		{
+			chatsProtected.GET("/by-url", chatHandler.GetChat)
+			chatsProtected.GET("/:id/messages", chatHandler.SendToChat)
 		}
 
 		// ── Collections ──
