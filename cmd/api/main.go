@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"scholic/internal/agents"
 	"scholic/internal/blocklist"
 	"scholic/internal/database"
 	"scholic/internal/discover"
@@ -48,6 +49,14 @@ func main() {
 	jwt.InitJWT()
 	blocklist.LoadAndCache()
 	ai.InitGemini()
+	chatAgent := agents.NewChatAgent(nil, []agents.Tool{
+		agents.SearchChatHistoryTool(),
+		agents.GetChatHistoryRangeTool(),
+		agents.SearchPageContentTool(),
+		agents.SearchAnnotationsTool(),
+		agents.CommentOnAnnotationTool(nil),
+	}, agents.LoadRecentChatMessages)
+	chatHandler := endpoints.NewChatHandler(chatAgent)
 
 	// Initialize R2 (optional — server works without it, just can't upload files)
 	if err := media.InitializeR2(); err != nil {
@@ -149,6 +158,14 @@ func main() {
 			bookmarksProtected.POST("", endpoints.CreateBookmark)
 			bookmarksProtected.PATCH("/by-url", endpoints.UpdateBookmarkByURL)
 			bookmarksProtected.DELETE("/by-url", endpoints.DeleteBookmarkByURL)
+		}
+
+		// ── Chats ──
+		chatsProtected := api.Group("/chats")
+		chatsProtected.Use(middleware.AuthMiddleware())
+		{
+			chatsProtected.GET("/by-url", chatHandler.GetChat)
+			chatsProtected.GET("/:id/messages", chatHandler.SendToChat)
 		}
 
 		// ── Collections ──

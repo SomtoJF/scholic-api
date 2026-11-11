@@ -58,5 +58,13 @@ func InitializeDatabase() {
 		CREATE INDEX IF NOT EXISTS idx_messages_text_search
 		ON messages USING GIN (to_tsvector('english', message_text))
 	`)
+	_, _ = sqlDB.Exec(`
+		CREATE INDEX IF NOT EXISTS idx_annotations_quote_text_search
+		ON annotations USING GIN (to_tsvector('english', coalesce(quote_text, '')))
+	`)
+	_, _ = sqlDB.Exec(`
+		CREATE INDEX IF NOT EXISTS idx_annotations_text_search
+		ON annotations USING GIN (to_tsvector('english', coalesce(text, '')))
+	`)
 	log.Println("[Scholic] Database indexes verified")
 }
