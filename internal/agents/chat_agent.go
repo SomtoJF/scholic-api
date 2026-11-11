@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 )
 
 type ChatAgent struct {
@@ -28,11 +29,24 @@ func (a *ChatAgent) Run(ctx context.Context, input RunInput) (RunOutput, error) 
 	if err != nil {
 		return RunOutput{}, err
 	}
-	messages = append(messages, ContextMessage{Role: "user", Content: input.Message})
 	definitions := make([]ToolDefinition, 0, len(a.Tools))
 	for _, tool := range a.Tools {
 		definitions = append(definitions, tool.Definition())
 	}
+	systemPrompt, err := RenderSystemPrompt(definitions)
+	if err != nil {
+		return RunOutput{}, err
+	}
+	userPrompt, err := RenderUserPrompt(UserPromptData{
+		CurrentDateTime: promptDateTime(time.Now()),
+		PageURL:         input.PageURL,
+		Message:         input.Message,
+		History:         messages,
+	})
+	if err != nil {
+		return RunOutput{}, err
+	}
+	messages = []ContextMessage{{Role: "system", Content: systemPrompt}, {Role: "user", Content: userPrompt}}
 
 	for turn := 0; turn < MaxLLMTurns; turn++ {
 		modelTurn, err := a.Provider.Complete(ctx, ModelRequest{Messages: messages, Tools: definitions})

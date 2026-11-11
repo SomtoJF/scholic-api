@@ -58,13 +58,36 @@ func SearchPageContentTool() Tool {
 	return FuncTool{ToolDefinition: ToolDefinition{Name: "SearchPageContent", Description: "Ask the browser frontend to search the current page.", Arguments: SearchPageContentInput{}}}
 }
 
-func CommentOnAnnotationTool(handler func(context.Context, ToolContext, json.RawMessage) (any, error)) Tool {
-	if handler == nil {
-		handler = func(context.Context, ToolContext, json.RawMessage) (any, error) {
-			return nil, errors.New("comment tool is not configured")
-		}
+func CommentOnAnnotationTool() Tool {
+	return FuncTool{ToolDefinition: ToolDefinition{Name: "CommentOnAnnotation", Description: "Comment on an annotation.", Arguments: CommentOnAnnotationInput{}}, Handler: commentOnAnnotation}
+}
+
+func commentOnAnnotation(ctx context.Context, input ToolContext, raw json.RawMessage) (any, error) {
+	var request CommentOnAnnotationInput
+	if err := json.Unmarshal(raw, &request); err != nil {
+		return nil, err
 	}
-	return FuncTool{ToolDefinition: ToolDefinition{Name: "CommentOnAnnotation", Description: "Comment on an annotation.", Arguments: CommentOnAnnotationInput{}}, Handler: handler}
+	if request.AnnotationID == 0 {
+		return nil, errors.New("annotationId is required")
+	}
+	request.Text = strings.TrimSpace(request.Text)
+	if request.Text == "" {
+		return nil, errors.New("text is required")
+	}
+
+	db := database.DB.WithContext(ctx)
+	var annotation models.Annotation
+	if err := db.First(&annotation, request.AnnotationID).Error; err != nil {
+		return nil, err
+	}
+	comment := models.Comment{AnnotationID: annotation.ID, UserID: input.UserID, Text: request.Text}
+	if err := db.Create(&comment).Error; err != nil {
+		return nil, err
+	}
+	if err := db.Preload("User").First(&comment, comment.ID).Error; err != nil {
+		return nil, err
+	}
+	return comment, nil
 }
 
 func searchChatHistory(ctx context.Context, input ToolContext, raw json.RawMessage) (any, error) {

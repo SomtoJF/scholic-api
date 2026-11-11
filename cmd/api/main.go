@@ -54,7 +54,7 @@ func main() {
 		agents.GetChatHistoryRangeTool(),
 		agents.SearchPageContentTool(),
 		agents.SearchAnnotationsTool(),
-		agents.CommentOnAnnotationTool(nil),
+		agents.CommentOnAnnotationTool(),
 	}, agents.LoadRecentChatMessages)
 	chatHandler := endpoints.NewChatHandler(chatAgent)
 

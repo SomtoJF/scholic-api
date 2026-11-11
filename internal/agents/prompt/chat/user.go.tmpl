@@ -1,0 +1,9 @@
+<chat_request>
+  <current_date_time>{{.CurrentDateTime}}</current_date_time>
+  <page_url>{{.PageURL}}</page_url>
+  <message>{{.Message}}</message>
+  <recent_history>
+    {{range .History}}<message><role>{{.Role}}</role><content>{{.Content}}</content></message>
+    {{end}}
+  </recent_history>
+</chat_request>
