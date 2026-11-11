@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"scholic/internal/agents"
+	"scholic/internal/agents/chat"
+	chattools "scholic/internal/agents/chat/tools"
 	"scholic/internal/blocklist"
 	"scholic/internal/database"
 	"scholic/internal/discover"
@@ -55,13 +57,13 @@ func main() {
 	} else {
 		chatProvider = provider
 	}
-	chatAgent := agents.NewChatAgent(chatProvider, []agents.Tool{
-		agents.SearchChatHistoryTool(),
-		agents.GetChatHistoryRangeTool(),
-		agents.SearchPageContentTool(),
-		agents.SearchAnnotationsTool(),
-		agents.CommentOnAnnotationTool(),
-	}, agents.LoadRecentChatMessages)
+	chatAgent := chat.NewChatAgent(chatProvider, []agents.Tool{
+		chattools.SearchChatHistoryTool(),
+		chattools.GetChatHistoryRangeTool(),
+		chattools.SearchPageContentTool(),
+		chattools.SearchAnnotationsTool(),
+		chattools.CommentOnAnnotationTool(),
+	}, chat.LoadRecentChatMessages, chattools.FilterPageSearchResult)
 	chatHandler := endpoints.NewChatHandler(chatAgent)
 
 	// Initialize R2 (optional — server works without it, just can't upload files)

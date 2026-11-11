@@ -5,12 +5,6 @@ import (
 	"encoding/json"
 )
 
-const (
-	MaxToolCallsPerTurn = 4
-	MaxLLMTurns         = 10
-	RecentMessageLimit  = 20
-)
-
 type Agent interface {
 	Run(context.Context, RunInput) (RunOutput, error)
 	GetTools() []Tool
@@ -26,13 +20,6 @@ type RunInput struct {
 
 type RunOutput struct {
 	Output *string `json:"output"`
-}
-
-type ModelRequest struct {
-	Model      string
-	ToolChoice string
-	Messages   []ContextMessage
-	Tools      []ToolDefinition
 }
 
 type CompletionRequest struct {
@@ -93,11 +80,6 @@ func (a DecisionAnswer) IsTrue() bool {
 		return *a.Noul
 	}
 	return a.Value != nil && *a.Value
-}
-
-type ModelTurn struct {
-	Output    *string    `json:"output"`
-	ToolCalls []ToolCall `json:"toolCalls"`
 }
 
 type ToolCall struct {
