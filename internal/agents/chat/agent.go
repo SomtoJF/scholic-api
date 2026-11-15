@@ -253,6 +253,7 @@ func (a *ChatAgent) executeToolCall(ctx context.Context, input agents.RunInput, 
 			log.Printf("[SearchPageContent] relevance filter failed; using raw result: %v", err)
 			return result
 		}
+		log.Printf("[PageSearchFilter] response: %+v", filtered)
 		result.Output = filtered
 		return result
 	}
