@@ -19,7 +19,7 @@ type SearchAnnotationsInput struct {
 }
 
 func SearchAnnotationsTool() agents.Tool {
-	return agents.FuncTool{ToolDefinition: agents.ToolDefinition{Name: "SearchAnnotations", Description: "Search annotations visible to the user using full text search.", Arguments: SearchAnnotationsInput{}}, Handler: searchAnnotations}
+	return agents.FuncTool{ToolDefinition: agents.ToolDefinition{Name: "SearchAnnotations", Description: "Use to find saved annotations containing a specific target quote or note; this is a database text search, not semantic retrieval. Set query to one free-text sentence describing what you are looking for, and set searchText to the exact word or phrase to search for in annotation quotes or notes. Use distinctive target text, not generic filler terms. For open-ended webpage questions, treat page content as the default source of truth. If unsure whether the target information is in annotations or prior chat, call this concurrently with SearchChatHistory. Use before CommentOnAnnotation when the target annotation ID is unknown.", Arguments: SearchAnnotationsInput{}}, Handler: searchAnnotations}
 }
 func searchAnnotations(ctx context.Context, input agents.ToolContext, raw json.RawMessage) (any, error) {
 	var request SearchAnnotationsInput

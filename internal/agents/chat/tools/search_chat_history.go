@@ -19,7 +19,7 @@ type SearchChatHistoryInput struct {
 }
 
 func SearchChatHistoryTool() agents.Tool {
-	return agents.FuncTool{ToolDefinition: agents.ToolDefinition{Name: "SearchChatHistory", Description: "Search this chat's messages using PostgreSQL full text search.", Arguments: SearchChatHistoryInput{}}, Handler: searchChatHistory}
+	return agents.FuncTool{ToolDefinition: agents.ToolDefinition{Name: "SearchChatHistory", Description: "Use to find earlier messages when the conversation already established or settled the relevant answer; this is a database text search, not semantic retrieval. Set query to one free-text sentence describing what you are looking for, and set searchText to the exact word or phrase to search for in prior messages. Use distinctive target text, not generic filler terms. For open-ended webpage questions, prefer current page content unless chat history already settled the relevant interpretation or answer. If unsure whether the target information is in chat history or annotations, call this concurrently with SearchAnnotations.", Arguments: SearchChatHistoryInput{}}, Handler: searchChatHistory}
 }
 func searchChatHistory(ctx context.Context, input agents.ToolContext, raw json.RawMessage) (any, error) {
 	var request SearchChatHistoryInput

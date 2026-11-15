@@ -19,7 +19,7 @@ func GetAnnotationHistoryRangeTool() agents.Tool {
 	return agents.FuncTool{
 		ToolDefinition: agents.ToolDefinition{
 			Name:        "GetAnnotationHistoryRange",
-			Description: "Read annotations on the current page. Start -1 returns the latest annotations.",
+			Description: "Use for exact ordered annotations on the current page, not text search. Returns public annotations and the current user's private annotations. start -1 gets the latest annotations chronologically; start 0 or greater gets chronological annotations starting at that offset. limit defaults to 10 and is capped at 100. Use when annotation IDs or surrounding annotation context are needed.",
 			Arguments:   GetAnnotationHistoryRangeInput{},
 		},
 		Handler: getAnnotationHistoryRange,

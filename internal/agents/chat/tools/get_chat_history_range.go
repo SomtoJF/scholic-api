@@ -16,7 +16,7 @@ type GetChatHistoryRangeInput struct {
 }
 
 func GetChatHistoryRangeTool() agents.Tool {
-	return agents.FuncTool{ToolDefinition: agents.ToolDefinition{Name: "GetChatHistoryRange", Description: "Read a message range. Start -1 returns the latest messages.", Arguments: GetChatHistoryRangeInput{}}, Handler: getChatHistoryRange}
+	return agents.FuncTool{ToolDefinition: agents.ToolDefinition{Name: "GetChatHistoryRange", Description: "Use for exact ordered conversational context, not text search. start -1 gets the latest messages chronologically; start 0 or greater gets chronological messages starting at that offset. limit defaults to 10 and is capped at 100.", Arguments: GetChatHistoryRangeInput{}}, Handler: getChatHistoryRange}
 }
 func getChatHistoryRange(ctx context.Context, input agents.ToolContext, raw json.RawMessage) (any, error) {
 	var request GetChatHistoryRangeInput
