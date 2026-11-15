@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -229,7 +230,9 @@ func (a *ChatAgent) executeToolCall(ctx context.Context, input agents.RunInput, 
 		return agents.ToolResult{ToolCallID: call.ID, Name: call.Name, Error: "page search transport is unavailable"}
 	}
 	if call.Name == "SearchPageContent" {
+		log.Printf("[SearchPageContent] frontend request: %+v", call.Arguments)
 		result, err := input.Transport.SendToolCall(ctx, call)
+		log.Printf("[SearchPageContent] frontend response: %+v (err=%v)", result, err)
 		if err != nil {
 			return agents.ToolResult{ToolCallID: call.ID, Name: call.Name, Error: err.Error()}
 		}
@@ -247,7 +250,8 @@ func (a *ChatAgent) executeToolCall(ctx context.Context, input agents.RunInput, 
 		}
 		filtered, err := a.PageSearchFilter(ctx, a.Provider, request.Query, result.Output)
 		if err != nil {
-			return agents.ToolResult{ToolCallID: call.ID, Name: call.Name, Error: err.Error()}
+			log.Printf("[SearchPageContent] relevance filter failed; using raw result: %v", err)
+			return result
 		}
 		result.Output = filtered
 		return result

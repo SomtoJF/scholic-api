@@ -13,14 +13,17 @@ import (
 const decisionsModel = "openai/gpt-6-luna-decisions"
 
 type PageSearchResult struct {
-	Query   string            `json:"query"`
-	Matches []PageSearchMatch `json:"matches"`
+	Query      string            `json:"query"`
+	Matches    []PageSearchMatch `json:"matches"`
+	Truncated  bool              `json:"truncated,omitempty"`
+	NextOffset *int              `json:"nextOffset,omitempty"`
 }
 type PageSearchMatch struct {
-	Text    string `json:"text"`
-	Context string `json:"context"`
-	Start   int    `json:"start"`
-	End     int    `json:"end"`
+	Text       string `json:"text"`
+	Context    string `json:"context"`
+	Start      int    `json:"start"`
+	End        int    `json:"end"`
+	PageNumber *int   `json:"pageNumber,omitempty"`
 }
 type relevanceCandidate struct {
 	Key   string

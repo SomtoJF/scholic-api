@@ -3,6 +3,9 @@ package agents
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"strconv"
+	"strings"
 )
 
 type Agent interface {
@@ -79,6 +82,50 @@ type DecisionAnswer struct {
 	Type  string `json:"type"`
 	Value *bool  `json:"value,omitempty"`
 	Noul  *bool  `json:"noul,omitempty"`
+}
+
+// UnmarshalJSON accepts Decisions responses that encode boolean answers as
+// booleans or numeric 0/1 values.
+func (a *DecisionAnswer) UnmarshalJSON(data []byte) error {
+	var raw struct {
+		Type  string          `json:"type"`
+		Value json.RawMessage `json:"value"`
+		Noul  json.RawMessage `json:"noul"`
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	value, err := decodeDecisionBool(raw.Value)
+	if err != nil {
+		return fmt.Errorf("value: %w", err)
+	}
+	noul, err := decodeDecisionBool(raw.Noul)
+	if err != nil {
+		return fmt.Errorf("noul: %w", err)
+	}
+	a.Type = raw.Type
+	a.Value = value
+	a.Noul = noul
+	return nil
+}
+
+func decodeDecisionBool(data []byte) (*bool, error) {
+	value := strings.TrimSpace(string(data))
+	if value == "" || value == "null" {
+		return nil, nil
+	}
+	if value == "true" || value == "false" {
+		parsed := value == "true"
+		return &parsed, nil
+	}
+	if number, err := strconv.ParseFloat(value, 64); err == nil {
+		parsed := number != 0
+		return &parsed, nil
+	}
+	if parsed, err := strconv.ParseBool(strings.Trim(value, `"`)); err == nil {
+		return &parsed, nil
+	}
+	return nil, fmt.Errorf("expected boolean or 0/1, got %s", value)
 }
 
 func (a DecisionAnswer) IsTrue() bool {
