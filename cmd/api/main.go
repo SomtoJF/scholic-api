@@ -60,6 +60,7 @@ func main() {
 	chatAgent := chat.NewChatAgent(chatProvider, []agents.Tool{
 		chattools.SearchChatHistoryTool(),
 		chattools.GetChatHistoryRangeTool(),
+		chattools.GetAnnotationHistoryRangeTool(),
 		chattools.SearchPageContentTool(),
 		chattools.SearchAnnotationsTool(),
 		chattools.CommentOnAnnotationTool(),
