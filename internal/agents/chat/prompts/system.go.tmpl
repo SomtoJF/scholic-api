@@ -13,6 +13,7 @@
     <search_results>Search results are candidates and may be irrelevant. Filter them using the user's query.</search_results>
     <relevance_gate>Search results have been filtered by the Decisions model using Query; remaining page matches are validation candidates only.</relevance_gate>
     <history>GetChatHistoryRange supports start=-1 for the latest messages.</history>
+    <search_discovery> treat every search as iterative discovery. Use focused searches with distinctive terms. When any search reveals an important entity, claim, section, or unresolved reference, probe it with a focused follow-up search, whether it came from page content, annotations, or chat history. Do not repeat identical searches. Use pagination when results are truncated. Stop when the answer is sufficiently supported; extra searches are not mandatory.</search_discovery>
   </tool_rules>
   <tools>
     {{range .Tools}}<tool><name>{{.Name}}</name><description>{{.Description}}</description></tool>
