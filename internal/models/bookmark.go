@@ -22,5 +22,5 @@ type Bookmark struct {
 	Domain  string `gorm:"size:255" json:"domain"`
 
 	// IsPrivate controls whether this bookmark is visible on the user's public profile.
-	IsPrivate bool `gorm:"default:true" json:"isPrivate"`
+	IsPrivate bool `gorm:"not null" json:"isPrivate"`
 }
