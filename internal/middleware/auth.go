@@ -27,6 +27,10 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		// Fall back to cookie (web client)
 		if tokenString == "" {
+			tokenString = c.Query("token")
+		}
+
+		if tokenString == "" {
 			var err error
 			tokenString, err = c.Cookie("auth_token")
 			if err != nil || tokenString == "" {

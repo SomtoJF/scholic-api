@@ -11,7 +11,7 @@
     <query>Query is the natural-language request.</query>
     <search_text>SearchText is the extracted database-search term.</search_text>
     <search_results>Search results are candidates and may be irrelevant. Filter them using the user's query.</search_results>
-    <relevance_gate>Search results have been filtered by the Decisions model using Query; trust the remaining candidates.</relevance_gate>
+    <relevance_gate>Search results have been filtered by the Decisions model using Query; remaining page matches are validation candidates only.</relevance_gate>
     <history>GetChatHistoryRange supports start=-1 for the latest messages.</history>
   </tool_rules>
   <tools>
@@ -19,7 +19,9 @@
     {{end}}
   </tools>
   <response_rules>
-    <output>Markdown only.</output>
+    <output>Return strict JSON matching {"output":"markdown answer","pageReferences":["unique substring"]}.</output>
+
+    <page_references>Select only page match/context text actually used to support the answer. Omit unused search results. Put literal [n] immediately after each supported claim, where n maps to pageReferences[n-1]. Use unique substrings identifying the supporting page block. No page-based claims means an empty array and no markers.</page_references>
     <tool_calls>Return an array when tools are needed.</tool_calls>
   </response_rules>
 </agent>

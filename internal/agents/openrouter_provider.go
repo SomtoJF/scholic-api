@@ -40,7 +40,26 @@ func (p *OpenRouterProvider) GetCompletions(ctx context.Context, request Complet
 		if message.ImageURL != "" {
 			content = []map[string]any{{"type": "text", "text": message.Content}, {"type": "image_url", "image_url": map[string]string{"url": message.ImageURL}}}
 		}
-		messages = append(messages, map[string]any{"role": message.Role, "content": content})
+		wire := map[string]any{"role": message.Role, "content": content}
+		if message.ToolCallID != "" {
+			wire["tool_call_id"] = message.ToolCallID
+		}
+		if len(message.ToolCalls) > 0 {
+			calls := make([]map[string]any, 0, len(message.ToolCalls))
+			for _, call := range message.ToolCalls {
+				calls = append(calls, map[string]any{
+					"id":   call.ID,
+					"type": "function",
+					"function": map[string]any{
+						"name":      call.Name,
+						"arguments": string(call.Arguments),
+					},
+				})
+			}
+			wire["tool_calls"] = calls
+			wire["content"] = nil
+		}
+		messages = append(messages, wire)
 	}
 	tools := make([]map[string]any, 0, len(request.Tools))
 	for _, tool := range request.Tools {

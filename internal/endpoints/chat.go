@@ -20,10 +20,11 @@ import (
 )
 
 type ChatMessage struct {
-	ID            uint      `json:"id"`
-	CreatedAt     time.Time `json:"createdAt"`
-	IsUserMessage bool      `json:"isUserMessage"`
-	MessageText   string    `json:"messageText"`
+	ID             uint               `json:"id"`
+	CreatedAt      time.Time          `json:"createdAt"`
+	IsUserMessage  bool               `json:"isUserMessage"`
+	MessageText    string             `json:"messageText"`
+	PageReferences models.StringSlice `json:"pageReferences"`
 }
 
 type GetChatResponse struct {
@@ -99,7 +100,7 @@ func loadChatMessages(ctx context.Context, chatID uint) ([]ChatMessage, error) {
 	messages := []ChatMessage{}
 	err := database.DB.WithContext(ctx).
 		Model(&models.Message{}).
-		Select("id, created_at, is_user_message, message_text").
+		Select("id, created_at, is_user_message, message_text, page_references").
 		Where("chat_id = ?", chatID).
 		Order("created_at ASC, id ASC").
 		Find(&messages).Error
@@ -201,7 +202,7 @@ func (h *ChatHandler) SendToChat(c *gin.Context) {
 		if runOutput.Output == nil {
 			continue
 		}
-		assistant, err := persistChatMessage(ctx, chat.ID, false, *runOutput.Output)
+		assistant, err := persistChatMessage(ctx, chat.ID, false, *runOutput.Output, runOutput.PageReferences)
 		if err != nil {
 			_ = writeChatError(ctx, conn, "failed to save assistant message")
 			continue
@@ -219,11 +220,14 @@ func getChatForUser(ctx context.Context, userID, chatID uint) (*models.Chat, err
 }
 
 func persistUserMessage(ctx context.Context, chatID uint, text string) (*models.Message, error) {
-	return persistChatMessage(ctx, chatID, true, text)
+	return persistChatMessage(ctx, chatID, true, text, nil)
 }
 
-func persistChatMessage(ctx context.Context, chatID uint, isUserMessage bool, text string) (*models.Message, error) {
-	message := &models.Message{ChatID: chatID, IsUserMessage: isUserMessage, MessageText: text}
+func persistChatMessage(ctx context.Context, chatID uint, isUserMessage bool, text string, pageReferences []string) (*models.Message, error) {
+	if pageReferences == nil {
+		pageReferences = []string{}
+	}
+	message := &models.Message{ChatID: chatID, IsUserMessage: isUserMessage, MessageText: text, PageReferences: models.StringSlice(pageReferences)}
 	if err := database.DB.WithContext(ctx).Create(message).Error; err != nil {
 		return nil, err
 	}
@@ -231,7 +235,7 @@ func persistChatMessage(ctx context.Context, chatID uint, isUserMessage bool, te
 }
 
 func chatMessageFromModel(message *models.Message) *ChatMessage {
-	return &ChatMessage{ID: message.ID, CreatedAt: message.CreatedAt, IsUserMessage: message.IsUserMessage, MessageText: message.MessageText}
+	return &ChatMessage{ID: message.ID, CreatedAt: message.CreatedAt, IsUserMessage: message.IsUserMessage, MessageText: message.MessageText, PageReferences: message.PageReferences}
 }
 
 func writeChatError(ctx context.Context, conn *websocket.Conn, message string) error {

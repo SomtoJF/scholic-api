@@ -53,7 +53,7 @@ func main() {
 	ai.InitGemini()
 	var chatProvider agents.LLMProvider
 	if provider, err := agents.NewOpenRouterProvider(os.Getenv("OPENROUTER_API_KEY")); err != nil {
-		log.Printf("[Warning] OpenRouter not initialized: %v", err)
+		log.Fatal("[Warning] OpenRouter not initialized: %v", err)
 	} else {
 		chatProvider = provider
 	}

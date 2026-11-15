@@ -19,7 +19,13 @@ type RunInput struct {
 }
 
 type RunOutput struct {
-	Output *string `json:"output"`
+	Output         *string  `json:"output"`
+	PageReferences []string `json:"pageReferences"`
+}
+
+type ChatResponse struct {
+	Output         string   `json:"output"`
+	PageReferences []string `json:"pageReferences"`
 }
 
 type CompletionRequest struct {
@@ -96,9 +102,11 @@ type ToolResult struct {
 }
 
 type ContextMessage struct {
-	Role     string `json:"role"`
-	Content  string `json:"content"`
-	ImageURL string `json:"imageUrl,omitempty"`
+	Role       string     `json:"role"`
+	Content    string     `json:"content"`
+	ImageURL   string     `json:"imageUrl,omitempty"`
+	ToolCallID string     `json:"toolCallId,omitempty"`
+	ToolCalls  []ToolCall `json:"toolCalls,omitempty"`
 }
 
 type LLMProvider interface {
