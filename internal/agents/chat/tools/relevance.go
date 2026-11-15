@@ -84,7 +84,14 @@ func decideRelevant(ctx context.Context, provider agents.LLMProvider, query, sea
 	questions := make(map[string]agents.DecisionQuestion, len(candidates))
 	stateCandidates := make([]any, 0, len(candidates))
 	for _, candidate := range candidates {
-		questions[candidate.Key] = agents.DecisionQuestion{Type: "noul", Instructions: "Is this search result relevant to the user's query?", Criteria: map[string]any{"true": "The result directly helps answer the query.", "false": "The result is irrelevant or does not help answer the query."}}
+		questions[candidate.Key] = agents.DecisionQuestion{
+			Type:         "noul",
+			Instructions: "Is this search result relevant to the user's query? Also deduplicate the result set: mark this result false when another candidate is an exact duplicate or overlaps it by more than 80% and is at least as useful. Keep overlapping results only when this candidate contains highly relevant unique information that the other candidate does not.",
+			Criteria: map[string]any{
+				"true":  "The result directly helps answer the query and is not redundant with a more useful candidate.",
+				"false": "The result is irrelevant, or is an exact/over-80%-overlap duplicate whose useful information is already represented by a better candidate.",
+			},
+		}
 		stateCandidates = append(stateCandidates, map[string]any{"id": candidate.Key, "result": candidate.Value})
 	}
 	response, err := provider.GetDecisions(ctx, agents.DecisionsRequest{Model: decisionsModel, State: map[string]any{"query": query, "searchText": searchText, "candidates": stateCandidates}, Questions: questions})

@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"scholic/internal/agents"
@@ -47,6 +48,11 @@ func TestFilterPageSearchResult(t *testing.T) {
 	}
 	if len(provider.decisions.Questions) != 2 {
 		t.Fatalf("expected two Decisions questions, got %d", len(provider.decisions.Questions))
+	}
+	for key, question := range provider.decisions.Questions {
+		if !strings.Contains(question.Instructions, "exact duplicate") || !strings.Contains(question.Instructions, "80%") {
+			t.Fatalf("missing deduplication guidance for %s: %q", key, question.Instructions)
+		}
 	}
 }
 
