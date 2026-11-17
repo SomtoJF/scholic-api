@@ -108,7 +108,7 @@ func CreateBookmark(c *gin.Context) {
 		Domain:    domain,
 		IsPrivate: req.IsPrivate,
 	}
-	if err := database.DB.Create(&bookmark).Error; err != nil {
+	if err := database.DB.Select("UserID", "URL", "Title", "Favicon", "Domain", "IsPrivate").Create(&bookmark).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create bookmark"})
 		return
 	}

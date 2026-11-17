@@ -238,7 +238,9 @@ func CreateDocument(c *gin.Context) {
 	if embErr != nil {
 		log.Printf("[Documents] Embedding generation failed: %v", embErr)
 	}
-	embeddingJSON := ""
+	// jsonb rejects an empty string; keep the column valid when embedding
+	// generation is unavailable and lexical search must be used.
+	embeddingJSON := "null"
 	if len(embedding) > 0 {
 		if encoded, err := json.Marshal(embedding); err == nil {
 			embeddingJSON = string(encoded)
