@@ -4,7 +4,8 @@ FROM golang:1.25-alpine AS builder
 WORKDIR /app
 
 # Install build deps
-RUN apk add --no-cache git ca-certificates
+RUN sed -i 's#dl-cdn.alpinelinux.org#dl-2.alpinelinux.org#g' /etc/apk/repositories && \
+    apk add --no-cache git ca-certificates
 
 # Cache deps before copying source
 COPY go.mod go.sum ./
@@ -24,7 +25,8 @@ WORKDIR /app
 
 # ca-certificates needed for outbound HTTPS (Google OAuth, R2, etc.).
 # poppler-utils provides pdfinfo/pdftotext for bounded document metadata extraction.
-RUN apk add --no-cache ca-certificates tzdata poppler-utils
+RUN sed -i 's#dl-cdn.alpinelinux.org#dl-2.alpinelinux.org#g' /etc/apk/repositories && \
+    apk add --no-cache ca-certificates tzdata poppler-utils
 
 COPY --from=builder /app/scholic_api .
 
