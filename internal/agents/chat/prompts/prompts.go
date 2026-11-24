@@ -15,6 +15,7 @@ var chatPromptFiles embed.FS
 type SystemPromptData struct {
 	CurrentContext string
 	Tools          []agents.ToolDefinition
+	Memories       []string
 }
 
 type UserPromptData struct {
@@ -43,10 +44,15 @@ func init() {
 }
 
 func RenderSystemPrompt(tools []agents.ToolDefinition) (string, error) {
+	return RenderSystemPromptWithMemories(tools, nil)
+}
+
+func RenderSystemPromptWithMemories(tools []agents.ToolDefinition, memories []string) (string, error) {
 	var rendered bytes.Buffer
 	if err := systemPrompt.Execute(&rendered, SystemPromptData{
 		CurrentContext: "Use the page URL and recent chat history supplied in the user request.",
 		Tools:          tools,
+		Memories:       memories,
 	}); err != nil {
 		return "", err
 	}

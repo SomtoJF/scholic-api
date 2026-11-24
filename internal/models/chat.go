@@ -20,4 +20,5 @@ type Chat struct {
 	URL string `gorm:"uniqueIndex:idx_chat_user_url;not null;size:2000" json:"url"`
 
 	Messages []Message `gorm:"foreignKey:ChatID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"messages,omitempty"`
+	Memories []Memory  `gorm:"foreignKey:ChatID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"memories,omitempty"`
 }

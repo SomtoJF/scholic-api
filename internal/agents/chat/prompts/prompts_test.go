@@ -25,3 +25,16 @@ func TestRenderSystemPromptIncludesSearchDiscoveryGuidance(t *testing.T) {
 		}
 	}
 }
+
+func TestRenderSystemPromptIncludesMemories(t *testing.T) {
+	rendered, err := RenderSystemPromptWithMemories(nil, []string{"[global] User prefers concise answers"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(rendered, "[global] User prefers concise answers") {
+		t.Fatal("system prompt missing memory")
+	}
+	if !strings.Contains(rendered, "Memory IDs identify the exact memories") {
+		t.Fatal("system prompt missing memory ID guidance")
+	}
+}

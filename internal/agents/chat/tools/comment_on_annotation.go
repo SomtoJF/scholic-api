@@ -17,7 +17,7 @@ type CommentOnAnnotationInput struct {
 }
 
 func CommentOnAnnotationTool() agents.Tool {
-	return agents.FuncTool{ToolDefinition: agents.ToolDefinition{Name: "CommentOnAnnotation", Description: "Use only for an explicit request to add a comment or reply. annotationId must identify the target annotation; find it first when unknown. text should contain only the intended comment. This is a write operation; never use it for read-only questions.", Arguments: CommentOnAnnotationInput{}}, Handler: commentOnAnnotation}
+	return agents.FuncTool{ToolDefinition: agents.ToolDefinition{Name: "CommentOnAnnotation", Description: "Use only for an explicit request to add a comment or reply. annotationId must identify the target annotation; find it first when unknown. text should contain only the intended plain-text comment; comments cannot be formatted, so do not write Markdown. This is a write operation; never use it for read-only questions.", Arguments: CommentOnAnnotationInput{}}, Handler: commentOnAnnotation}
 }
 func commentOnAnnotation(ctx context.Context, input agents.ToolContext, raw json.RawMessage) (any, error) {
 	var request CommentOnAnnotationInput

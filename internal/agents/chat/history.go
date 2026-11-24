@@ -32,6 +32,24 @@ func LoadRecentChatMessages(ctx context.Context, chatID uint, limit int) ([]agen
 	}
 	return result, nil
 }
+
+func LoadMemories(ctx context.Context, userID, chatID uint) ([]string, error) {
+	var memories []models.Memory
+	if err := database.DB.WithContext(ctx).
+		Where("user_id = ? AND (chat_id IS NULL OR chat_id = ?)", userID, chatID).
+		Order("created_at ASC, id ASC").Find(&memories).Error; err != nil {
+		return nil, err
+	}
+	result := make([]string, 0, len(memories))
+	for _, memory := range memories {
+		scope := "global"
+		if memory.ChatID != nil {
+			scope = "this chat"
+		}
+		result = append(result, fmt.Sprintf("[id=%d][%s] %s", memory.ID, scope, memory.Text))
+	}
+	return result, nil
+}
 func ValidateChatExists(ctx context.Context, chatID uint) error {
 	var chat models.Chat
 	if err := database.DB.WithContext(ctx).First(&chat, chatID).Error; err != nil {

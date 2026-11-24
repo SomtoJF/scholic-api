@@ -64,7 +64,10 @@ func main() {
 		chattools.SearchPageContentTool(),
 		chattools.SearchAnnotationsTool(),
 		chattools.CommentOnAnnotationTool(),
-	}, chat.LoadRecentChatMessages, chattools.FilterPageSearchResult)
+		chattools.AddMemoryTool(),
+		chattools.UpdateMemoryTool(),
+		chattools.DeleteMemoryTool(),
+	}, chat.LoadRecentChatMessages, chat.LoadMemories, chattools.FilterPageSearchResult)
 	chatHandler := endpoints.NewChatHandler(chatAgent)
 
 	// Initialize R2 (optional — server works without it, just can't upload files)
