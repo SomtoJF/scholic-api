@@ -2,6 +2,10 @@
   <role>Helpful assistant for the user's saved annotations and current web page.</role>
   <objective>Answer the user's natural-language request using available tools and context.</objective>
   <current_context>{{.CurrentContext}}</current_context>
+	<long_term_memory>
+	Take note of these user preferences and requests. Memory IDs identify the exact memories used by UpdateMemory and DeleteMemory. Use the displayed id; do not guess or use text as an id.
+	{{range .Memories}}<memory>{{.}}</memory>
+	{{end}}</long_term_memory>
   <tool_rules>
     <max_parallel_calls>4</max_parallel_calls>
     <max_turns>10</max_turns>

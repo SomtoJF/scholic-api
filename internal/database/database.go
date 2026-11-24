@@ -33,7 +33,7 @@ func InitializeDatabase() {
 	log.Printf("[Scholic] Database connected at %s:%s/%s",
 		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"))
 
-	err = DB.AutoMigrate(&models.User{}, &models.Annotation{}, &models.Highlight{}, &models.Comment{}, &models.Follow{}, &models.Reaction{}, &models.Notification{}, &models.Document{}, &models.Bookmark{}, &models.FeedEvent{}, &models.Collection{}, &models.CollectionEntry{}, &models.Chat{}, &models.Message{})
+	err = DB.AutoMigrate(&models.User{}, &models.Annotation{}, &models.Highlight{}, &models.Comment{}, &models.Follow{}, &models.Reaction{}, &models.Notification{}, &models.Document{}, &models.Bookmark{}, &models.FeedEvent{}, &models.Collection{}, &models.CollectionEntry{}, &models.Chat{}, &models.Message{}, &models.Memory{})
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}

@@ -28,13 +28,14 @@ type ChatAgent struct {
 	Provider         agents.LLMProvider
 	Tools            []agents.Tool
 	LoadChat         func(context.Context, uint, int) ([]agents.ContextMessage, error)
+	LoadMemories     func(context.Context, uint, uint) ([]string, error)
 	PageSearchFilter func(context.Context, agents.LLMProvider, string, any) (any, error)
 }
 
 var pageReferenceMarker = regexp.MustCompile(`\[(\d+)\]`)
 
-func NewChatAgent(provider agents.LLMProvider, tools []agents.Tool, loadChat func(context.Context, uint, int) ([]agents.ContextMessage, error), pageSearchFilter func(context.Context, agents.LLMProvider, string, any) (any, error)) agents.Agent {
-	return &ChatAgent{Provider: provider, Tools: tools, LoadChat: loadChat, PageSearchFilter: pageSearchFilter}
+func NewChatAgent(provider agents.LLMProvider, tools []agents.Tool, loadChat func(context.Context, uint, int) ([]agents.ContextMessage, error), loadMemories func(context.Context, uint, uint) ([]string, error), pageSearchFilter func(context.Context, agents.LLMProvider, string, any) (any, error)) agents.Agent {
+	return &ChatAgent{Provider: provider, Tools: tools, LoadChat: loadChat, LoadMemories: loadMemories, PageSearchFilter: pageSearchFilter}
 }
 
 func (a *ChatAgent) GetTools() []agents.Tool { return a.Tools }
@@ -47,11 +48,15 @@ func (a *ChatAgent) Run(ctx context.Context, input agents.RunInput) (agents.RunO
 	if err != nil {
 		return agents.RunOutput{}, err
 	}
+	memories, err := a.loadMemories(ctx, input)
+	if err != nil {
+		return agents.RunOutput{}, err
+	}
 	definitions := make([]agents.ToolDefinition, 0, len(a.Tools))
 	for _, tool := range a.Tools {
 		definitions = append(definitions, tool.Definition())
 	}
-	systemPrompt, err := prompts.RenderSystemPrompt(definitions)
+	systemPrompt, err := prompts.RenderSystemPromptWithMemories(definitions, memories)
 	if err != nil {
 		return agents.RunOutput{}, err
 	}
@@ -206,6 +211,13 @@ func (a *ChatAgent) loadContext(ctx context.Context, input agents.RunInput) ([]a
 		return nil, nil
 	}
 	return a.LoadChat(ctx, input.ChatID, recentMessageLimit)
+}
+
+func (a *ChatAgent) loadMemories(ctx context.Context, input agents.RunInput) ([]string, error) {
+	if a.LoadMemories == nil {
+		return nil, nil
+	}
+	return a.LoadMemories(ctx, input.UserID, input.ChatID)
 }
 
 func (a *ChatAgent) executeToolCalls(ctx context.Context, input agents.RunInput, calls []agents.ToolCall) ([]agents.ToolResult, error) {
